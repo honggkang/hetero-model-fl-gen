@@ -9,7 +9,6 @@ from utils.getModels import getModel
 def setup_experiment(args):
 
     if args.gen_model == 'ddpm':
-        args.name = args.name + 'w' + str(args.guide_w)
         args.save_dir = 'imgs/FedDDPM/'
     elif args.gen_model == 'vae':
         args.save_dir = 'imgs/FedCVAE/'
@@ -20,7 +19,6 @@ def setup_experiment(args):
     elif args.gen_model == 'ganf':
         args.save_dir = 'imgs/FedDCGANF/'
     elif args.gen_model == 'ddpmf':
-        args.name = str(args.num_users) + args.name + 'w' + str(args.guide_w)
         args.save_dir = 'imgs/FedDDPMF/'
         
     if 'f' in args.gen_model:

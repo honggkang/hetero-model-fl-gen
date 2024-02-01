@@ -323,6 +323,7 @@ class DDPM(nn.Module):
         return x_i, out_c
 
     def sample_image_4visualization(self, sample_num, guide_w = 0.0):
+        guide_w = self.args.guide_w
         with torch.no_grad():
             size = self.args.img_shape
             x_i = torch.randn(sample_num, *size).to(self.device)  # x_T ~ N(0, 1), sample initial noise
