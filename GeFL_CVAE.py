@@ -103,7 +103,7 @@ def main():
             best_perf = evaluate_models(local_models, ws_glob, dataset_test, args, iter, best_perf)
 
     print(best_perf, 'AVG'+str(args.rs), sum(best_perf)/len(best_perf))
-    # torch.save(gen_w_glob, 'checkpoint/FedCVAE' + str(args.name) + str(args.rs) + '.pt')
+    torch.save(gen_w_glob, 'checkpoint/FedCVAE' + str(args.name) + str(args.rs) + '.pt')
         
     if args.wandb:
         run.finish()

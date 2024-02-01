@@ -81,7 +81,7 @@ class generator(nn.Module):
         
         with torch.no_grad():
             z_ = torch.randn((sample_num, 100)).view(-1, 100, 1, 1).to(self.args.device)
-            labels = torch.arange(0,10).to(self.args.device) # context for us just cycles throught the mnist labels
+            labels = torch.arange(0,10) # context for us just cycles throught the mnist labels
             labels = labels.repeat(int(sample_num/labels.shape[0]))
 
             onehot = torch.zeros(10, 10)
