@@ -9,7 +9,7 @@ from utils.getModels import getModel
 def setup_experiment(args):
 
     if args.gen_model == 'ddpm':
-        args.name = args.name + 'w' + str(args.guide_w)
+        args.name = args.name + 'w' + str(args.guide_w) + '-'
         args.save_dir = 'imgs/FedDDPM/'
     elif args.gen_model == 'vae':
         args.save_dir = 'imgs/FedCVAE/'
@@ -27,7 +27,9 @@ def setup_experiment(args):
         args.output_channel = 3
         args.img_size = 16
         args.n_T = 500
-    args.img_shape = (args.output_channel, args.img_size, args.img_size)
+        args.img_shape = (args.feat_channel, args.img_size, args.img_size)
+    else:
+        args.img_shape = (args.output_channel, args.img_size, args.img_size)
 
     if not os.path.exists(args.save_dir):
         os.makedirs(args.save_dir)

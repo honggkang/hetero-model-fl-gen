@@ -80,6 +80,9 @@ def main():
         if args.save_imgs and (iter % args.sample_test == 0 or iter == args.gen_wu_epochs):
             save_generated_images(args.save_dir, gen_glob, args, iter)
         print('Warm-up Gen Round {:3d}, CVAE Average loss {:.3f}'.format(iter, loss_avg))
+    if args.aid_by_gen:
+        torch.save(gen_w_glob, 'checkpoint/FedCVAEF_' + str(args.name) + str(args.rs) + '.pt')
+   
 
     ''' ----------------------------------------
     Train main networks by local sample
@@ -109,7 +112,10 @@ def main():
             loss_locals.append(loss)
             gen_loss_locals.append(gen_loss)
 
-        ws_glob, w_comm = LGFedAvg_frozen_FE(args, ws_glob, ws_local, w_comm) # main net, feature extractor weight update
+        if args.freeze_FE:
+            ws_glob, w_comm = LGFedAvg_frozen_FE(args, ws_glob, ws_local, w_comm) # main net, feature extractor weight update
+        else:
+            ws_glob, w_comm = LGFedAvg(args, ws_glob, ws_local, w_comm)
         loss_avg = sum(loss_locals) / len(loss_locals)
         try:
             gen_loss_avg = sum(gen_loss_locals) / len(gen_loss_locals)

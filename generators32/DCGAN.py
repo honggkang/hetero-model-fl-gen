@@ -19,7 +19,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from utils.util import one_hot
-
+import numpy as np
 
 # G(z)s
 class generator(nn.Module):
@@ -37,7 +37,7 @@ class generator(nn.Module):
         self.deconv3 = nn.ConvTranspose2d(d*2, d, 4, 2, 1)
         self.deconv3_bn = nn.BatchNorm2d(d)
         
-        self.deconv4 = nn.ConvTranspose2d(d, 1, 4, 2, 1)
+        self.deconv4 = nn.ConvTranspose2d(d, args.output_channel, 4, 2, 1)
         # self.deconv5 = nn.ConvTranspose2d(d*2, args.output_channel, 4, 2, 1)
         
         self.args = args
@@ -58,6 +58,29 @@ class generator(nn.Module):
         x = torch.tanh(self.deconv4(x))
         
         return x
+    
+    def sample_cond_image(self, args, sample_num=0,  condition_index=None):
+        with torch.no_grad():
+            z_ = torch.randn((sample_num, 100)).view(-1, 100, 1, 1).to(args.device)
+
+            # Choose a specific condition based on the provided index
+            if condition_index is None:
+                y_ = torch.randint(self.args.num_classes, (sample_num,)).to(args.device)
+            else:
+                y_ = torch.tensor([condition_index] * sample_num).to(args.device)
+
+            onehot = torch.zeros(self.args.num_classes, self.args.num_classes)
+            onehot = onehot.scatter_(1, torch.LongTensor(np.arange(self.args.num_classes)).view(self.args.num_classes,1), 1).view(self.args.num_classes, self.args.num_classes, 1, 1) # 10 x 10 eye matrix
+            onehot = onehot.to(self.args.device)
+
+            y_label_ = onehot[y_]
+            y_label_ = y_label_.to(self.args.device)
+            gen_imgs = self.forward(z_, y_label_)
+
+            # c = torch.randint(10, (args.batch_size, )).to(args.device) # MAX_NUM, (SIZE, )
+            one_c = one_hot(y_, self.args.num_classes).to(args.device)
+
+            return gen_imgs, one_c
 
     def sample_image(self, args, sample_num=0):
         with torch.no_grad():
@@ -86,7 +109,8 @@ class generator(nn.Module):
 
             onehot = torch.zeros(10, 10)
             onehot = onehot.scatter_(1, torch.LongTensor([0, 1, 2, 3, 4, 5, 6, 7, 8, 9]).view(10,1), 1).view(10, 10, 1, 1) # 10 x 10 eye matrix
-
+            onehot = onehot.to(self.args.device)
+            
             y_label_ = onehot[labels]
             y_label_ = y_label_.to(self.args.device)
             gen_imgs = self.forward(z_, y_label_)

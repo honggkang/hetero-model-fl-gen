@@ -31,27 +31,32 @@ def main():
     opt = torch.optim.Adam(gen_glob.parameters(), lr=1e-3, weight_decay=0.001).state_dict()
     opts = [copy.deepcopy(opt) for _ in range(args.num_users)]
 
-    ''' ---------------------------
-    Federated Training generative model
-    --------------------------- '''
-    for iter in range(1, args.gen_wu_epochs+1):
-        gen_w_local, loss_locals = [], []
-        
-        idxs_users = user_select(args)
-        for idx in idxs_users:
-            local = LocalUpdate_CVAE(args, dataset=train_data, idxs=dict_users[idx])
-            gen_weight, loss, opts[idx] = local.train(net=copy.deepcopy(gen_glob), opt=opts[idx])
-            gen_w_local.append(copy.deepcopy(gen_weight))
-            loss_locals.append(loss)
-        
-        gen_w_glob = FedAvg(gen_w_local)
-        gen_glob.load_state_dict(gen_w_glob)
-        loss_avg = sum(loss_locals) / len(loss_locals)
+    if args.resume:
+        gen_glob.load_state_dict(torch.load(args.saved_ckpt))
+    else:
+        ''' ---------------------------
+        Federated Training generative model
+        --------------------------- '''
+        for iter in range(1, args.gen_wu_epochs+1):
+            gen_w_local, loss_locals = [], []
+            
+            idxs_users = user_select(args)
+            for idx in idxs_users:
+                local = LocalUpdate_CVAE(args, dataset=train_data, idxs=dict_users[idx])
+                gen_weight, loss, opts[idx] = local.train(net=copy.deepcopy(gen_glob), opt=opts[idx])
+                gen_w_local.append(copy.deepcopy(gen_weight))
+                loss_locals.append(loss)
+            
+            gen_w_glob = FedAvg(gen_w_local)
+            gen_glob.load_state_dict(gen_w_glob)
+            loss_avg = sum(loss_locals) / len(loss_locals)
 
-        if args.save_imgs and (iter % args.sample_test == 0 or iter == args.gen_wu_epochs):
-            save_generated_images(args.save_dir, gen_glob, args, iter)
-        print('Warm-up Gen Round {:3d}, Average loss {:.3f}'.format(iter, loss_avg))
-
+            if args.save_imgs and (iter % args.sample_test == 0 or iter == args.gen_wu_epochs):
+                save_generated_images(args.save_dir, gen_glob, args, iter)
+            print('Warm-up Gen Round {:3d}, Average loss {:.3f}'.format(iter, loss_avg))
+        if args.aid_by_gen:
+            torch.save(gen_w_glob, 'checkpoint/FedCVAE_' + str(args.name) + str(args.rs) + '.pt')
+        
     best_perf = [0 for _ in range(args.num_models)]
     ''' ----------------------------------------
     Train main networks by local sample and generated samples
@@ -103,8 +108,7 @@ def main():
             best_perf = evaluate_models(local_models, ws_glob, dataset_test, args, iter, best_perf)
 
     print(best_perf, 'AVG'+str(args.rs), sum(best_perf)/len(best_perf))
-    torch.save(gen_w_glob, 'checkpoint/FedCVAE' + str(args.name) + str(args.rs) + '.pt')
-        
+    
     if args.wandb:
         run.finish()
 

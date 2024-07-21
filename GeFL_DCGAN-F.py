@@ -57,6 +57,10 @@ def main():
 
     gen_glob = generator(args, d=128).to(args.device)
     dis_glob = discriminator(args, d=128).to(args.device)
+    if args.dataset == 'cifar10':
+        gen_glob = generator(args, d=256).to(args.device) 
+        dis_glob = discriminator(args, d=64).to(args.device)
+        
     gen_glob.weight_init(mean=0.0, std=0.02)
     dis_glob.weight_init(mean=0.0, std=0.02)
     optg = torch.optim.Adam(gen_glob.parameters(), lr=args.gan_lr, betas=(args.b1, args.b2)).state_dict()
@@ -92,6 +96,8 @@ def main():
         if args.save_imgs and (iter % args.sample_test == 0 or iter == args.gen_wu_epochs):
             save_generated_images(args.save_dir, gen_glob, args, iter)
         print('Warm-up Gen Round {:3d}, G Avg loss {:.3f}, D Avg loss {:.3f}'.format(iter, gloss_avg, dloss_avg))
+    if args.aid_by_gen:
+        torch.save(gen_w_glob, 'checkpoint/FedDDPMF_' + str(args.name) + str(args.rs) + '.pt')
 
     ''' ----------------------------------------
     Train main networks by local sample
@@ -157,6 +163,9 @@ def main():
             best_perf = evaluate_models(local_models, ws_glob, dataset_test, args, iter, best_perf)
                                     
     print(best_perf, 'AVG'+str(args.rs), sum(best_perf)/len(best_perf))
+    if args.aid_by_gen:
+        torch.save(gen_w_glob, 'checkpoint/FedDCGANF_G_' + str(args.name) + str(args.rs) + '.pt')
+        torch.save(dis_w_glob, 'checkpoint/FedDCGANF_D_' + str(args.name) + str(args.rs) + '.pt')
 
     if args.wandb:
         run.finish()

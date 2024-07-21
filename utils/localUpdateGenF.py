@@ -1,6 +1,7 @@
 from torch.utils.data import DataLoader, Dataset
 import torch
 import torch.nn.functional as F
+import torchvision
 import numpy as np
 from tqdm import tqdm
 from torch import nn
@@ -148,7 +149,7 @@ class LocalUpdate_DCGANF(object): # DCGAN
                 
                 with torch.no_grad():
                     x_ = self.feature_extractor(x_)
-                # save_image(x_.view(128, 1, 32, 32), 'imgFedDCGANF/' + 'sample_xx.png', nrow=10)
+                    # torchvision.utils.save_image(x_.view(128, 3, 16, 16), 'imgs/' + 'sample_xx.png', nrow=10)
                 
                 D_result = dnet(x_, y_fill_).squeeze()
                 D_real_loss = BCE_loss(D_result, y_real_)
@@ -237,7 +238,7 @@ class LocalUpdate_DDPMF(object): # DDPM
                 images = images.to(self.args.device) # images.shape: torch.Size([batch_size, 1, 28, 28])
                 labels = labels.to(self.args.device)
                 with torch.no_grad():
-                    images = self.feature_extractor(images).view(-1, self.args.output_channel, self.args.img_size, self.args.img_size)
+                    images = self.feature_extractor(images).view(-1, self.args.feat_channel, self.args.img_size, self.args.img_size)
                 # x.view(-1, self.feature_size*self.feature_size) in CVAE.forward 
                 # images = images.view(-1, self.args.output_channel, self.args.img_size, self.args.img_size)
                 # images = images.view(-1, 1, self.args.feature_size, self.args.feature_size) # self.args.local_bs

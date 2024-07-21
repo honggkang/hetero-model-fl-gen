@@ -37,7 +37,7 @@ class generator(nn.Module):
         self.deconv3_bn = nn.BatchNorm2d(d)
         self.deconv4 = nn.ConvTranspose2d(d, 1, 4, 2, 1)
 
-        self.deconv5 = nn.ConvTranspose2d(d*2, args.output_channel, 4, 2, 1)
+        self.deconv5 = nn.ConvTranspose2d(d*2, args.feat_channel, 4, 2, 1)
         
         self.args = args
 
@@ -119,7 +119,7 @@ class discriminator(nn.Module):
     def __init__(self, args, d=128):
         super(discriminator, self).__init__()
         # self.conv1_1 = nn.Conv2d(1, int(d/2), 4, 2, 1) # 1 64
-        self.conv1_1 = nn.Conv2d(args.output_channel, int(d/2), 4, 2, 1) # 1 64
+        self.conv1_1 = nn.Conv2d(args.feat_channel, int(d/2), 4, 2, 1) # 1 64
         self.conv1_2 = nn.Conv2d(10, int(d/2), 4, 2, 1)
         self.conv2 = nn.Conv2d(d, d*2, 4, 2, 1) # 128 256
         self.conv2_bn = nn.BatchNorm2d(d*2)

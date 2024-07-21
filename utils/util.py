@@ -7,7 +7,7 @@ import logging
 import copy
 from torchvision.utils import save_image
 import wandb
-
+import matplotlib.pyplot as plt
 
 def one_hot(labels, class_size):
     targets = torch.zeros(labels.size(0), class_size)
@@ -72,8 +72,14 @@ def save_generated_images(dir, gen_model, args, iter):
     gen_model.eval()
     sample_num = 40
     samples = gen_model.sample_image_4visualization(sample_num)
-    save_image(samples.view(sample_num, args.output_channel, args.img_size, args.img_size),
-                dir + str(args.name)+ str(args.rs) +'_' + str(iter) + '.png', nrow=10)  # normalize=True
+    if 'f' in args.gen_model:
+        samples = torch.sum(samples, 1) / samples.shape[1]
+        samples = samples.unsqueeze(1)    
+        save_image(samples.view(sample_num, 1, args.img_size, args.img_size),
+                    dir + str(args.name)+ str(args.rs) +'_' + str(iter) + '.png', nrow=10)  # normalize=True
+    else:
+        save_image(samples.view(sample_num, args.output_channel, args.img_size, args.img_size),
+                    dir + str(args.name)+ str(args.rs) +'_' + str(iter) + '.png', nrow=10) 
     gen_model.train()
 
 

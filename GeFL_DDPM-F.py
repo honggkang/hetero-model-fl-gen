@@ -55,7 +55,7 @@ def main():
     common_net.load_state_dict(w_comm)
     common_net.eval()
 
-    gen_glob = DDPM(args, nn_model=ContextUnet(in_channels=args.output_channel, n_feat=args.n_feat, n_classes=args.num_classes),
+    gen_glob = DDPM(args, nn_model=ContextUnet(in_channels=args.feat_channel, n_feat=args.n_feat, n_classes=args.num_classes),
                     betas=(1e-4, 0.02), drop_prob=0.1).to(args.device)
     opt = torch.optim.Adam(gen_glob.parameters(), lr=1e-4).state_dict()
     opts = [copy.deepcopy(opt) for _ in range(args.num_users)]
@@ -84,7 +84,8 @@ def main():
         if args.save_imgs and (iter % args.sample_test == 0 or iter == args.gen_wu_epochs):
             save_generated_images(args.save_dir, gen_glob, args, iter)
         print('Warm-up Gen Round {:3d}, Average loss {:.3f}'.format(iter, gloss_avg))
-
+    torch.save(gen_w_glob, 'checkpoint/FedDDPMF_' + str(args.name) + str(args.rs) + '.pt')
+    
     ''' ----------------------------------------
     Train main networks by local sample
     and generated samples, then update generator

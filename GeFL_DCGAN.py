@@ -24,6 +24,11 @@ def main():
     loss_train = []
     gen_glob = generator(args, d=128).to(args.device)
     dis_glob = discriminator(args, d=128).to(args.device)
+
+    if args.dataset == 'cifar10':
+        gen_glob = generator(args, d=256).to(args.device) 
+        dis_glob = discriminator(args, d=64).to(args.device)
+        
     gen_glob.weight_init(mean=0.0, std=0.02)
     dis_glob.weight_init(mean=0.0, std=0.02)
     optg = torch.optim.Adam(gen_glob.parameters(), lr=args.gan_lr, betas=(args.b1, args.b2)).state_dict()
@@ -31,33 +36,38 @@ def main():
     optgs = [copy.deepcopy(optg) for _ in range(args.num_users)]
     optds = [copy.deepcopy(optd) for _ in range(args.num_users)]
 
-    ''' ---------------------------
-    Federated Training generative model
-    --------------------------- '''    
-    for iter in range(1, args.gen_wu_epochs+1):
-        gen_w_local, dis_w_local, gloss_locals, dloss_locals = [], [], [], []
-        
-        idxs_users = user_select(args)
-        for idx in idxs_users:
-            local = LocalUpdate_DCGAN(args, dataset=train_data, idxs=dict_users[idx])
-            g_weight, d_weight, gloss, dloss, optgs[idx], optds[idx] = local.train(gnet=copy.deepcopy(gen_glob), dnet=copy.deepcopy(dis_glob), iter=iter, optg=optgs[idx], optd=optds[idx])
-            gen_w_local.append(copy.deepcopy(g_weight))
-            dis_w_local.append(copy.deepcopy(d_weight))           
-            gloss_locals.append(gloss)
-            dloss_locals.append(dloss)
-        
-        gen_w_glob = FedAvg(gen_w_local)
-        dis_w_glob = FedAvg(dis_w_local)        
-        gen_glob.load_state_dict(gen_w_glob)
-        dis_glob.load_state_dict(dis_w_glob)
-        gloss_avg = sum(gloss_locals) / len(gloss_locals)
-        dloss_avg = sum(dloss_locals) / len(dloss_locals)
-        if args.save_imgs and (iter % args.sample_test == 0 or iter == args.gen_wu_epochs):
-            save_generated_images(args.save_dir, gen_glob, args, iter)
-        print('Warm-up Gen Round {:3d}, G Avg loss {:.3f}, D Avg loss {:.3f}'.format(iter, gloss_avg, dloss_avg))
+    if args.resume:
+        gen_glob.load_state_dict(torch.load(args.saved_ckpt_g))
+        dis_glob.load_state_dict(torch.load(args.saved_ckpt_d))
+    else:
+        ''' ---------------------------
+        Federated Training generative model
+        --------------------------- '''    
+        for iter in range(1, args.gen_wu_epochs+1):
+            gen_w_local, dis_w_local, gloss_locals, dloss_locals = [], [], [], []
+            
+            idxs_users = user_select(args)
+            for idx in idxs_users:
+                local = LocalUpdate_DCGAN(args, dataset=train_data, idxs=dict_users[idx])
+                g_weight, d_weight, gloss, dloss, optgs[idx], optds[idx] = local.train(gnet=copy.deepcopy(gen_glob), dnet=copy.deepcopy(dis_glob), iter=iter, optg=optgs[idx], optd=optds[idx])
+                gen_w_local.append(copy.deepcopy(g_weight))
+                dis_w_local.append(copy.deepcopy(d_weight))           
+                gloss_locals.append(gloss)
+                dloss_locals.append(dloss)
+            
+            gen_w_glob = FedAvg(gen_w_local)
+            dis_w_glob = FedAvg(dis_w_local)        
+            gen_glob.load_state_dict(gen_w_glob)
+            dis_glob.load_state_dict(dis_w_glob)
+            gloss_avg = sum(gloss_locals) / len(gloss_locals)
+            dloss_avg = sum(dloss_locals) / len(dloss_locals)
+            if args.save_imgs and (iter % args.sample_test == 0 or iter == args.gen_wu_epochs):
+                save_generated_images(args.save_dir, gen_glob, args, iter)
+            print('Warm-up Gen Round {:3d}, G Avg loss {:.3f}, D Avg loss {:.3f}'.format(iter, gloss_avg, dloss_avg))
+        if args.aid_by_gen:
+            torch.save(gen_w_glob, 'checkpoint/FedDCGAN_G_' + str(args.name) + str(args.rs) + '.pt')
+            torch.save(dis_w_glob, 'checkpoint/FedDCGAN_D_' + str(args.name) + str(args.rs) + '.pt')
 
-    # torch.save(gen_w_glob, 'models/save/Fed' + '_' + str(args.models) + '_DCGAN_G_sameSize.pt')
-    
     best_perf = [0 for _ in range(args.num_models)]
 
     ''' ----------------------------------------
@@ -128,7 +138,9 @@ def main():
             best_perf = evaluate_models(local_models, ws_glob, dataset_test, args, iter, best_perf)
                                     
     print(best_perf, 'AVG'+str(args.rs), sum(best_perf)/len(best_perf))
-    torch.save(gen_w_glob, 'checkpoint/FedDCGAN' + str(args.name) + str(args.rs) + '.pt')
+    if args.aid_by_gen:
+        torch.save(gen_w_glob, 'checkpoint/FedDCGAN_G_' + str(args.name) + str(args.rs) + '.pt')
+        torch.save(dis_w_glob, 'checkpoint/FedDCGAN_D_' + str(args.name) + str(args.rs) + '.pt')
 
     if args.wandb:
         run.finish()
@@ -145,8 +157,11 @@ if __name__ == "__main__":
         torch.manual_seed(args.rs)
         torch.cuda.manual_seed(args.rs)
         torch.cuda.manual_seed_all(args.rs) # if use multi-GPU
+        torch.backends.cudnn.deterministic = True
+        torch.backends.cudnn.benchmark = False
         np.random.seed(args.rs)
         random.seed(args.rs)
         results.append(main())
         args.rs = args.rs+1
         print(results)
+    

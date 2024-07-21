@@ -27,29 +27,33 @@ def main():
                     betas=(1e-4, 0.02), drop_prob=0.1).to(args.device)
     opt = torch.optim.Adam(gen_glob.parameters(), lr=1e-4).state_dict()
     opts = [copy.deepcopy(opt) for _ in range(args.num_users)]    
-
-    ''' -------------------------------
-    Federated Training generative model
-    ------------------------------- '''
-    for iter in range(1, args.gen_wu_epochs+1):
-        gen_w_local, gloss_locals = [], []
-        
-        idxs_users = user_select(args)
-        for idx in idxs_users:
-            local = LocalUpdate_DDPM(args, dataset=train_data, idxs=dict_users[idx])
-            lr_rate = 1-iter/args.gen_wu_epochs
-            g_weight, gloss, opts[idx] = local.train(net=copy.deepcopy(gen_glob), lr_decay_rate=lr_rate, opt=opts[idx])
-            gen_w_local.append(copy.deepcopy(g_weight))
-            gloss_locals.append(gloss)
-        
-        gen_w_glob = FedAvg(gen_w_local)
-        gen_glob.load_state_dict(gen_w_glob)
-        gloss_avg = sum(gloss_locals) / len(gloss_locals)
-        if args.save_imgs and (iter % args.sample_test == 0 or iter == args.gen_wu_epochs):
-            save_generated_images(args.save_dir, gen_glob, args, iter)
-        print('Warm-up GEN Round {:3d}, G Avg loss {:.3f}'.format(iter, gloss_avg))
+    if args.resume:
+        gen_glob.load_state_dict(torch.load(args.saved_ckpt))
+    else:
+        ''' -------------------------------
+        Federated Training generative model
+        ------------------------------- '''
+        for iter in range(1, args.gen_wu_epochs+1):
+            gen_w_local, gloss_locals = [], []
+            
+            idxs_users = user_select(args)
+            for idx in idxs_users:
+                local = LocalUpdate_DDPM(args, dataset=train_data, idxs=dict_users[idx])
+                lr_rate = 1-iter/args.gen_wu_epochs
+                g_weight, gloss, opts[idx] = local.train(net=copy.deepcopy(gen_glob), lr_decay_rate=lr_rate, opt=opts[idx])
+                gen_w_local.append(copy.deepcopy(g_weight))
+                gloss_locals.append(gloss)
+            
+            gen_w_glob = FedAvg(gen_w_local)
+            gen_glob.load_state_dict(gen_w_glob)
+            gloss_avg = sum(gloss_locals) / len(gloss_locals)
+            if args.save_imgs and (iter % args.sample_test == 0 or iter == args.gen_wu_epochs):
+                save_generated_images(args.save_dir, gen_glob, args, iter)
+            print('Warm-up GEN Round {:3d}, G Avg loss {:.3f}'.format(iter, gloss_avg))
+        torch.save(gen_w_glob, 'checkpoint/FedDDPM_' + str(args.name) + str(args.rs) + '.pt')
 
     best_perf = [0 for _ in range(args.num_models)]
+
     ''' -----------------------------------------------------
     Train main networks by local sample and generated samples
     ----------------------------------------------------- '''
@@ -94,7 +98,6 @@ def main():
             best_perf = evaluate_models(local_models, ws_glob, dataset_test, args, iter, best_perf)            
 
     print(best_perf, 'AVG'+str(args.rs), sum(best_perf)/len(best_perf))
-    torch.save(gen_w_glob, 'checkpoint/FedDDPM' + str(args.name) + str(args.rs) + '.pt')
 
     if args.wandb:
         run.finish()

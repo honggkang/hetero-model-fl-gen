@@ -38,7 +38,7 @@ def getModel(args):
         
         common_net = FE_CNN_5().to(args.device)
 
-    elif args.models == 'cnnbn' and (args.dataset == 'mnist' or args.dataset == 'fmnist'):
+    elif args.models == 'cnnbn' and (args.dataset == 'mnist' or args.dataset == 'fmnist' ):
         from targetNetModels.cnnbn import CNN2, CNN3, CNN3b, CNN3c, CNN4, CNN4b, CNN4c, CNN5, CNN5b, CNN5c, FE_CNN
         net_temp1 = CNN2().to(args.device)
         net_temp2 = CNN3().to(args.device)
@@ -88,6 +88,36 @@ def getModel(args):
         
     elif args.models == 'cnn3' and args.dataset == 'svhn':
         from targetNetModels.cnnbn import CNN2, CNN3, CNN3b, CNN3c, CNN4, CNN4b, CNN4c, CNN5, CNN5b, CNN5c, FE_CNN
+        net_temp1 = CNN2().to(args.device)
+        net_temp2 = CNN3().to(args.device)
+        net_temp2b = CNN3b().to(args.device)
+        net_temp3 = CNN3c().to(args.device)
+        net_temp3b = CNN4().to(args.device)
+        net_temp3c = CNN4b().to(args.device)
+        net_temp4 = CNN4c().to(args.device)
+        net_temp4b = CNN5().to(args.device)
+        net_temp4c = CNN5b().to(args.device)
+        net_temp5 = CNN5c().to(args.device)
+        
+        common_net = FE_CNN().to(args.device)
+
+    elif args.models == 'cnn3' and args.dataset == 'cifar10':
+        from targetNetModels.cnn3 import CNN2, CNN3, CNN3b, CNN3c, CNN4, CNN4b, CNN4c, CNN5, CNN5b, CNN5c, FE_CNN
+        net_temp1 = CNN2().to(args.device)
+        net_temp2 = CNN3().to(args.device)
+        net_temp2b = CNN3b().to(args.device)
+        net_temp3 = CNN3c().to(args.device)
+        net_temp3b = CNN4().to(args.device)
+        net_temp3c = CNN4b().to(args.device)
+        net_temp4 = CNN4c().to(args.device)
+        net_temp4b = CNN5().to(args.device)
+        net_temp4c = CNN5b().to(args.device)
+        net_temp5 = CNN5c().to(args.device)
+        
+        common_net = FE_CNN().to(args.device)
+
+    elif args.models == 'cnn3-layer2' and args.dataset == 'cifar10':
+        from targetNetModels.cnn3_layer2 import CNN2, CNN3, CNN3b, CNN3c, CNN4, CNN4b, CNN4c, CNN5, CNN5b, CNN5c, FE_CNN
         net_temp1 = CNN2().to(args.device)
         net_temp2 = CNN3().to(args.device)
         net_temp2b = CNN3b().to(args.device)

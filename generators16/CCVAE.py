@@ -35,7 +35,7 @@ class CCVAE(nn.Module):
         self.args = args
 
         # For encode
-        self.conv1 = nn.Conv2d(args.output_channel+1, 64, kernel_size=4, stride=2, padding=1)
+        self.conv1 = nn.Conv2d(args.feat_channel+1, 64, kernel_size=4, stride=2, padding=1)
         self.bn1 = nn.BatchNorm2d(64)
         self.conv2 = nn.Conv2d(64, 128, kernel_size=4, stride=2, padding=1)
         self.bn2 = nn.BatchNorm2d(128)
@@ -55,7 +55,7 @@ class CCVAE(nn.Module):
         self.bn6 = nn.BatchNorm2d(128)
         self.conv7 = nn.ConvTranspose2d(128, 64, kernel_size=4, stride=2, padding=1)
         self.bn7 = nn.BatchNorm2d(64)
-        self.conv8 = nn.ConvTranspose2d(64, args.output_channel, kernel_size=4, stride=2, padding=1)
+        self.conv8 = nn.ConvTranspose2d(64, args.feat_channel, kernel_size=4, stride=2, padding=1)
 
     def encoder(self,x,y):
         y = torch.argmax(y, dim=1).reshape((y.shape[0],1,1,1))

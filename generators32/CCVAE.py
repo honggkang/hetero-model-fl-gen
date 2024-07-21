@@ -11,7 +11,7 @@ import numpy as np
 import torch.nn as nn
 import torch.nn. functional as F
 from utils.util import one_hot
-
+import numpy as np
 
 class CCVAE(nn.Module):
     def __init__(self, args):
@@ -101,6 +101,25 @@ class CCVAE(nn.Module):
             one_c = one_hot(y, args.num_classes).to(self.args.device)
 
         return pred, one_c
+
+    def sample_cond_image(self, args, sample_num=0,  condition_index=None):
+        with torch.no_grad():
+            z = torch.randn(sample_num, args.latent_size).to(self.args.device)
+
+            # Choose a specific condition based on the provided index
+            if condition_index is None:
+                y = (torch.rand(sample_num, 1) * 10).type(torch.LongTensor).squeeze()
+            else:
+                y = torch.tensor([condition_index] * sample_num)
+
+            label = np.zeros((y.shape[0], 10))
+            label[np.arange(z.shape[0]), y] = 1
+            label = torch.tensor(label)
+            pred = self.decoder(torch.cat((z, label.float().to(self.args.device)), dim=1))
+            one_c = one_hot(y, args.num_classes).to(self.args.device)
+
+        return pred, one_c
+
 
     def sample_image_4visualization(self, sample_num):
         z = torch.randn(sample_num, self.args.latent_size).to(self.args.device)
