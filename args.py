@@ -82,7 +82,7 @@ def parse_args():
     args = parser.parse_args()
     args.device = 'cuda:' + args.device_id
     
-    if args.dataset == 'fmnist' or 'mnist':
+    if args.dataset == 'fmnist' or args.dataset == 'mnist':
         args.gen_wu_epochs = 100
         args.epochs = 50
         if not args.freeze_gen:
