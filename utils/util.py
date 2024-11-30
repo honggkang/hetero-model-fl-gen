@@ -41,6 +41,9 @@ def test_img(net_g, datatest, args):
 
 def get_logger(logpath, filepath, package_files=[], displaying=True, saving=True, debug=False):
     logger = logging.getLogger()
+    if len(logger.handlers)>0:
+        logger.handlers.clear()
+        
     if debug:
         level = logging.DEBUG
     else:
@@ -57,8 +60,9 @@ def get_logger(logpath, filepath, package_files=[], displaying=True, saving=True
         # console_handler.terminator = ""
         logger.addHandler(console_handler)
     logger.info(filepath)
-    with open(filepath, "r") as f:
-        logger.info(f.read())
+    
+    # with open(filepath, "r") as f:
+        # logger.info(f.read())
 
     for f in package_files:
         logger.info(f)
