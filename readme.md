@@ -40,3 +40,20 @@ We propose Generative Model-Aided Federated Learning GeFL, which incorporates a 
 
 ## AvgKD
 > python GeFL_CVAE.py --aid_by_gen 0 --avg_FE 0 --avgKD 1
+
+
+### Citation
+
+Honggu Kang, Seohyeon Cha, and Joonhyuk Kang. {GeFL}: {M}odel-Agnostic Federated Learning with Generative Models. *arXiv preprint arXiv:2412.18460*, 2024.
+
+```
+@article{kang2024gefl,
+      title={{GeFL}: {M}odel-Agnostic Federated Learning with Generative Models}, 
+      author={Honggu Kang and Seohyeon Cha and Joonhyuk Kang},
+      year={2024},
+      eprint={2412.18460},
+      archivePrefix={arXiv},
+      primaryClass={cs.LG},
+      url={https://arxiv.org/abs/2412.18460}, 
+}
+```
