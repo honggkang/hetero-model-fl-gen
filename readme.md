@@ -44,7 +44,7 @@ We propose Generative Model-Aided Federated Learning GeFL, which incorporates a 
 
 ### Citation
 
-Honggu Kang, Seohyeon Cha, and Joonhyuk Kang. {GeFL}: {M}odel-Agnostic Federated Learning with Generative Models. *arXiv preprint arXiv:2412.18460*, 2024.
+Honggu Kang, Seohyeon Cha, and Joonhyuk Kang. GeFL: Model-Agnostic Federated Learning with Generative Models. *arXiv preprint arXiv:2412.18460*, 2024.
 
 ```
 @article{kang2024gefl,
