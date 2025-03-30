@@ -37,6 +37,7 @@ def dict_iid(dataset, num_users):
         all_idxs = list(set(all_idxs) - dict_users[i])
     return dict_users
 
+
 def mnist_noniid(dataset, num_users, seed):
     """
     Sample non-I.I.D client data from MNIST dataset
@@ -154,8 +155,8 @@ def getDataset(args):
             transforms.Normalize((0.1307,), (0.3081,)),
         ])
         
-        dataset_train = datasets.MNIST('/home/hong/NeFL/.data/mnist', train=True, download=True, transform=transform_train)
-        dataset_test = datasets.MNIST('/home/hong/NeFL/.data/mnist', train=False, download=True, transform=transform_test)
+        dataset_train = datasets.MNIST('.data/mnist', train=True, download=True, transform=transform_train)
+        dataset_test = datasets.MNIST('.data/mnist', train=False, download=True, transform=transform_test)
 
     elif args.dataset == 'mnist' and 'cnn' in args.models:
         transform_train = transforms.Compose([
@@ -170,8 +171,8 @@ def getDataset(args):
             # transforms.Normalize((0.1307,), (0.3081,)), # DCGAN 0.5
         ])
         
-        dataset_train = datasets.MNIST('/home/hong/NeFL/.data/mnist', train=True, download=True, transform=transform_train)
-        dataset_test = datasets.MNIST('/home/hong/NeFL/.data/mnist', train=False, download=True, transform=transform_test)
+        dataset_train = datasets.MNIST('.data/mnist', train=True, download=True, transform=transform_train)
+        dataset_test = datasets.MNIST('.data/mnist', train=False, download=True, transform=transform_test)
 
     elif args.dataset == 'fmnist' and 'mlp' in args.models:
         transform_train = transforms.Compose([
@@ -216,8 +217,8 @@ def getDataset(args):
             transforms.ToTensor(),
             transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
         ])
-        dataset_train = datasets.CIFAR10('/home/hong/NeFL/.data/cifar', train=True, download=True, transform=transform_train)
-        dataset_test = datasets.CIFAR10('/home/hong/NeFL/.data/cifar', train=False, download=True, transform=transform_test)
+        dataset_train = datasets.CIFAR10('.data/cifar10', train=True, download=True, transform=transform_train)
+        dataset_test = datasets.CIFAR10('.data/cifar10', train=False, download=True, transform=transform_test)
 
     elif args.dataset == 'svhn':
         ### SVHN
