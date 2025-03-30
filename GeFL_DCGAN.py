@@ -16,6 +16,10 @@ from generators32.DCGAN import *
 from utils.util import save_generated_images, evaluate_models
 
 
+def count_parameters(model):
+    return sum(p.numel() for p in model.parameters() if p.requires_grad)
+
+
 def main():
     
     dataset_train, dataset_test, dict_users, local_models, common_net, w_comm, ws_glob, run = setup_experiment(args)
@@ -24,6 +28,15 @@ def main():
     loss_train = []
     gen_glob = generator(args, d=128).to(args.device)
     dis_glob = discriminator(args, d=128).to(args.device)
+    # gen_glob = generator(args, d=256).to(args.device) # cifar10
+    # dis_glob = discriminator(args, d=64).to(args.device) # cifar10
+
+    # Count parameters for generator and discriminator
+    # gen_params = count_parameters(gen_glob)
+    # dis_params = count_parameters(dis_glob)
+    # print(f"Generator Parameters: {gen_params}")
+    # print(f"Discriminator Parameters: {dis_params}")
+
     gen_glob.weight_init(mean=0.0, std=0.02)
     dis_glob.weight_init(mean=0.0, std=0.02)
     optg = torch.optim.Adam(gen_glob.parameters(), lr=args.gan_lr, betas=(args.b1, args.b2)).state_dict()

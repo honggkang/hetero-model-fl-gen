@@ -16,6 +16,10 @@ from DDPM.ddpm32 import * # DDPM.ddpm28
 from utils.util import save_generated_images, evaluate_models
 
 
+def count_parameters(model):
+    return sum(p.numel() for p in model.parameters() if p.requires_grad)
+
+
 def main():
 
     dataset_train, dataset_test, dict_users, local_models, common_net, w_comm, ws_glob, run = setup_experiment(args)    
@@ -25,6 +29,7 @@ def main():
     lr = 1e-1 # MLP
     gen_glob = DDPM(args, nn_model=ContextUnet(in_channels=args.output_channel, n_feat=args.n_feat, n_classes=args.num_classes),
                     betas=(1e-4, 0.02), drop_prob=0.1).to(args.device)
+    print(f"Number of parameters in gen_glob: {count_parameters(gen_glob)}")
     opt = torch.optim.Adam(gen_glob.parameters(), lr=1e-4).state_dict()
     opts = [copy.deepcopy(opt) for _ in range(args.num_users)]    
 

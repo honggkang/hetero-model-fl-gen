@@ -20,16 +20,36 @@ from utils.getGenTrainData import generator_traindata
 from utils.util import save_generated_images, evaluate_models
 from generators32.CCVAE import *
 
+from torchsummary import summary
+
+def count_parameters(model, part):
+    if part == "encoder":
+        layers = [model.conv1, model.conv2, model.conv3, model.conv4, model.conv5, model.mu, model.logvar, model.bn1, model.bn2, model.bn3, model.bn4, model.bn5]
+    elif part == "decoder":
+        layers = [model.linear, model.conv6, model.conv7, model.conv8, model.conv9, model.conv10, model.bn6, model.bn7, model.bn8, model.bn9]
+    else:
+        raise ValueError("Invalid part. Choose 'encoder' or 'decoder'.")
+
+    total_params = 0
+    for layer in layers:
+        total_params += sum(p.numel() for p in layer.parameters())
+    return total_params
 
 def main():
 
     dataset_train, dataset_test, dict_users, local_models, common_net, w_comm, ws_glob, run = setup_experiment(args)
     print(args)
+    # summary(local_models[0], (3, 32, 32))
 
     loss_train = []
     gen_glob = CCVAE(args).to(args.device)
     opt = torch.optim.Adam(gen_glob.parameters(), lr=1e-3, weight_decay=0.001).state_dict()
     opts = [copy.deepcopy(opt) for _ in range(args.num_users)]
+
+    # encoder_params = count_parameters(gen_glob, "encoder")
+    # decoder_params = count_parameters(gen_glob, "decoder")
+    # print(f"Encoder Parameters: {encoder_params}")
+    # print(f"Decoder Parameters: {decoder_params}")
 
     ''' ---------------------------
     Federated Training generative model
