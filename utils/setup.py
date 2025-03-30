@@ -33,7 +33,10 @@ def setup_experiment(args):
     dataset_train, dataset_test = getDataset(args)
     dict_users = dict_iid(dataset_train, int(1/args.partial_data*args.num_users)) # , args.rs
     local_models, common_net = getModel(args)
-    w_comm = common_net.state_dict()
+    try:
+        w_comm = common_net.state_dict()
+    except:
+        w_comm = 'null'
     ws_glob = [local_models[_].state_dict() for _ in range(args.num_models)]
 
     timestamp = datetime.now().strftime("%Y%m%d-%H%M%S")

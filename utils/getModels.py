@@ -130,6 +130,21 @@ def getModel(args):
         net_temp5 = MLP6().to(args.device)
         
         common_net = FE_MLP().to(args.device)
+    elif args.models == 'large':
+        import torchvision.models as models
+        net_temp1 = models.resnet18(num_classes=10)
+        net_temp2 = models.vgg16(num_classes=10)
+        net_temp2b = models.wide_resnet50_2(num_classes=10)
+        net_temp3 = models.squeezenet1_0(num_classes=10)
+        net_temp3b = models.shufflenet_v2_x1_0(num_classes=10)
+        net_temp3c = models.resnext50_32x4d(num_classes=10)
+        net_temp4 = models.mobilenet_v3_small(num_classes=10)
+        net_temp4b = models.regnet_y_400mf(num_classes=10)
+        net_temp4c = models.efficientnet_v2_s(num_classes=10)
+        net_temp5 = models.convnext_base(num_classes=10)
+        # wide_resnet50_2 = models.wide_resnet50_2() googlenet
+
+        common_net = 'null'
 
     local_models.append(net_temp1)
     local_models.append(net_temp2)
