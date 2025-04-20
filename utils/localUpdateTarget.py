@@ -20,6 +20,20 @@ class DatasetSplit(Dataset):
         image, label = self.dataset[self.idxs[item]]
         return image, label
 
+
+class DatasetSplit_CelebA(Dataset):
+    def __init__(self, dataset, idxs):
+        self.dataset = dataset
+        self.idxs = list(idxs)
+
+    def __len__(self):
+        return len(self.idxs)
+
+    def __getitem__(self, item):
+        image, attr = self.dataset[self.idxs[item]]
+        return image, attr[20] # return gender attribute
+    
+
 ##########################################
 #                  GeFL                  #
 ##########################################
@@ -27,9 +41,17 @@ class DatasetSplit(Dataset):
 class LocalUpdate(object):
     def __init__(self, args, dataset=None, idxs=None):
         self.args = args
-        self.loss_func = nn.CrossEntropyLoss()
         self.selected_clients = []
-        self.ldr_train = DataLoader(DatasetSplit(dataset, idxs), batch_size=args.local_bs, shuffle=True)
+        if args.dataset == 'celebA':
+            self.ldr_train = DataLoader(DatasetSplit_CelebA(dataset, idxs), batch_size=args.local_bs, shuffle=True)        
+        else:
+            self.ldr_train = DataLoader(DatasetSplit(dataset, idxs), batch_size=args.local_bs, shuffle=True)
+
+        if args.dataset == 'celebA':
+            self.loss_func = nn.BCEWithLogitsLoss()  # For multi-label classification
+        else:
+            self.loss_func = nn.CrossEntropyLoss()  # For single-label classification
+
         if len(idxs)//args.local_bs == 0:
             self.iter = 1
             self.less_samples = True
@@ -59,7 +81,7 @@ class LocalUpdate(object):
                             images, labels = gennet.sample_image(self.args, sample_num=self.args.local_bs) # images.shape (bs, feature^2)
                     net.zero_grad()
                     logits, log_probs = net(images)
-                    loss = F.cross_entropy(logits, labels) # net.fc1.weight.grad / net.fc5.weight.grad
+                    loss = self.loss_func(logits, labels)
                     optimizer.zero_grad()
                     loss.backward()
                     optimizer.step()
@@ -78,10 +100,11 @@ class LocalUpdate(object):
             batch_loss = []
 
             for batch_idx, (images, labels) in enumerate(self.ldr_train):
-                images, labels = images.to(self.args.device), labels.to(self.args.device)
+                images = images.to(self.args.device)
+                labels = labels.unsqueeze(-1).float().to(self.args.device)
                 net.zero_grad()
                 logits, log_probs = net(images)
-                loss = F.cross_entropy(logits, labels)
+                loss = self.loss_func(logits, labels)
                 optimizer.zero_grad()
                 loss.backward()
                 optimizer.step()

@@ -22,6 +22,8 @@ def test_img(net_g, datatest, args):
     # testing
     test_loss = 0
     correct = 0
+    total_samples = 0
+
 
     data_loader = DataLoader(datatest, batch_size=args.bs)
     with torch.no_grad():
@@ -29,10 +31,18 @@ def test_img(net_g, datatest, args):
           if 'cuda' in args.device:
               data, target = data.to(args.device), target.to(args.device)
           logits, log_probs = net_g(data)
-          test_loss += F.cross_entropy(log_probs, target, reduction='sum').item()
-          y_pred = log_probs.data.max(1, keepdim=True)[1]
 
-          correct += y_pred.eq(target.data.view_as(y_pred)).long().cpu().sum()
+          if args.dataset == 'celebA':  # Multi-label classification
+              test_loss += F.binary_cross_entropy_with_logits(logits, target, reduction='sum').item()
+        # Convert logits to binary predictions (threshold = 0.5)
+              y_pred = (torch.sigmoid(logits) > 0.5).float()
+              correct += (y_pred == target).sum().item()
+              total_samples += target.numel()  # Total number of labels
+          else:
+              test_loss += F.cross_entropy(log_probs, target, reduction='sum').item()
+              y_pred = log_probs.data.max(1, keepdim=True)[1]
+              correct += y_pred.eq(target.data.view_as(y_pred)).long().cpu().sum()
+              total_samples += len(target)
     test_loss /= len(data_loader.dataset)
     accuracy = 100.00 * correct / len(data_loader.dataset)
     net_g.to('cpu')

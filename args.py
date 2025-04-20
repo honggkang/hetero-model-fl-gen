@@ -7,23 +7,23 @@ def parse_args():
     ### clients
     parser.add_argument('--num_users', type=int, default=10)
     parser.add_argument('--frac', type=float, default=1)
-    parser.add_argument('--partial_data', type=float, default=0.1)
+    parser.add_argument('--partial_data', type=float, default=0.005)
     
     ### model & feature size
-    parser.add_argument('--models', type=str, default='cnnbn') # cnn (MNIST), cnnbn (FMNIST), mlp
-    parser.add_argument('--output_channel', type=int, default=1) # local epochs for training generator
-    parser.add_argument('--img_size', type=int, default=32) # local epochs for training generator
-    parser.add_argument('--orig_img_size', type=int, default=32) # local epochs for training generator
+    parser.add_argument('--models', type=str, default='cnn3_64') # cnn (MNIST), cnnbn (FMNIST), mlp, large, cnn3_64 (celebA)
+    parser.add_argument('--output_channel', type=int, default=3) # local epochs for training generator
+    parser.add_argument('--img_size', type=int, default=64) # local epochs for training generator
+    parser.add_argument('--orig_img_size', type=int, default=64) # local epochs for training generator
 
     ### dataset
-    parser.add_argument('--dataset', type=str, default='fmnist') # stl10, cifar10, svhn, fmnist, mnist, emnist
+    parser.add_argument('--dataset', type=str, default='celebA') # stl10, cifar10, svhn, fmnist, mnist, emnist, celebA
     parser.add_argument('--noniid', action='store_true') # default: false
     parser.add_argument('--dir_param', type=float, default=0.3)
-    parser.add_argument('--num_classes', type=int, default=10)
+    parser.add_argument('--num_classes', type=int, default=1)
 
     ### optimizer
-    parser.add_argument('--bs', type=int, default=64)
-    parser.add_argument('--local_bs', type=int, default=64)
+    parser.add_argument('--bs', type=int, default=128)
+    parser.add_argument('--local_bs', type=int, default=128)
     parser.add_argument('--momentum', type=float, default=0)
     parser.add_argument('--weight_decay', type=float, default=0)
 
@@ -37,7 +37,7 @@ def parse_args():
     parser.add_argument('--freeze_FE', type=bool, default=True)
 
     ### GeFL / GeFL-F
-    parser.add_argument('--gen_wu_epochs', type=int, default=100) # warm-up epochs for generator
+    parser.add_argument('--gen_wu_epochs', type=int, default=1) # warm-up epochs for generator
 
     parser.add_argument('--epochs', type=int, default=50)
     parser.add_argument('--local_ep', type=int, default=5)
@@ -46,7 +46,7 @@ def parse_args():
 
     parser.add_argument('--aid_by_gen', type=int, default=1) # False True
     parser.add_argument('--freeze_gen', type=int, default=1) # GAN: False
-    parser.add_argument('--avg_FE', type=int, default=1) # True: LG-FedAvg
+    parser.add_argument('--avg_FE', type=int, default=0) # True: LG-FedAvg
     parser.add_argument('--only_gen', type=int, default=0)
 
     ### logging
@@ -58,7 +58,7 @@ def parse_args():
 
     parser.add_argument('--gen_model', type=str, default='vae') # vae, gan, ddpm
     ### VAE parameters
-    parser.add_argument('--latent_size', type=int, default=16) # local epochs for training generator
+    parser.add_argument('--latent_size', type=int, default=50) # local epochs for training generator
     ### GAN parameters
     parser.add_argument("--b1", type=float, default=0.5, help="adam: decay of first order momentum of gradient")
     parser.add_argument("--b2", type=float, default=0.999, help="adam: decay of first order momentum of gradient")
@@ -80,7 +80,8 @@ def parse_args():
     parser.add_argument('--avgKD', type=bool, default=False)
 
     args = parser.parse_args()
-    args.device = 'cuda:' + args.device_id
+    # args.device = 'cuda:' + args.device_id
+    args.device = 'cpu'
     
     if args.dataset == 'fmnist' or args.dataset == 'mnist':
         args.gen_wu_epochs = 100

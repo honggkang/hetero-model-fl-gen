@@ -18,9 +18,11 @@ from utils.localUpdateGen import LocalUpdate_CVAE
 from utils.avg import LGFedAvg, model_wise_FedAvg, FedAvg
 from utils.getGenTrainData import generator_traindata
 from utils.util import save_generated_images, evaluate_models
-from generators32.CCVAE import *
+from generators64.CCVAE import *
 
-from torchsummary import summary
+from torchsummaryX import summary
+from pthflops import count_ops
+from calflops import calculate_flops
 
 def count_parameters(model, part):
     if part == "encoder":
@@ -40,6 +42,14 @@ def main():
     dataset_train, dataset_test, dict_users, local_models, common_net, w_comm, ws_glob, run = setup_experiment(args)
     print(args)
     # summary(local_models[0], (3, 32, 32))
+    # batch_size = 1
+    # input_shape = (batch_size, 3, 32, 32)
+    # flops, macs, params = calculate_flops(model=model, 
+    #                                     input_shape=input_shape,
+    #                                     output_as_string=True,
+    #                                     output_precision=4)
+    # summary(local_models[0], torch.zeros((1, 3, 32, 32)))
+    # count_ops(local_models[0], torch.zeros((1, 3, 32, 32)))
 
     loss_train = []
     gen_glob = CCVAE(args).to(args.device)
@@ -50,6 +60,17 @@ def main():
     # decoder_params = count_parameters(gen_glob, "decoder")
     # print(f"Encoder Parameters: {encoder_params}")
     # print(f"Decoder Parameters: {decoder_params}")
+    # batch_size = 1
+    # input = torch.randn(batch_size, 3, 32, 32).to(args.device)  # Adjust input shape
+    # label = torch.zeros(batch_size, 10).to(args.device)
+    # # Call calculate_flops with args and kwargs
+    # flops, macs, params = calculate_flops(
+    #     model=gen_glob,
+    #     args=[input, label],  # Pass input and label as positional arguments
+    #     kwargs={},            # No keyword arguments in this case
+    #     output_as_string=True,
+    #     output_precision=4
+    # )
 
     ''' ---------------------------
     Federated Training generative model

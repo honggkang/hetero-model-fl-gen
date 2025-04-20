@@ -15,6 +15,7 @@ from utils.getGenTrainData import generator_traindata
 from generators32.DCGAN import *
 from utils.util import save_generated_images, evaluate_models
 
+from calflops import calculate_flops
 
 def count_parameters(model):
     return sum(p.numel() for p in model.parameters() if p.requires_grad)
@@ -26,10 +27,39 @@ def main():
     print(args)            
 
     loss_train = []
-    gen_glob = generator(args, d=128).to(args.device)
-    dis_glob = discriminator(args, d=128).to(args.device)
-    # gen_glob = generator(args, d=256).to(args.device) # cifar10
-    # dis_glob = discriminator(args, d=64).to(args.device) # cifar10
+    # gen_glob = generator(args, d=128).to(args.device)
+    # dis_glob = discriminator(args, d=128).to(args.device)
+    gen_glob = generator(args, d=256).to(args.device) # cifar10
+    dis_glob = discriminator(args, d=64).to(args.device) # cifar10
+
+    batch_size = 1
+    input = torch.randn(batch_size, 100, 1, 1)  # Random noise input
+    label = torch.zeros(batch_size, 10, 1, 1)  # Example one-hot encoded label
+    label[:, 0, :, :] = 1  # Set the first label to 1 (example)
+
+    # Call calculate_flops with args and kwargs
+    flops, macs, params = calculate_flops(
+        model=gen_glob,
+        args=[input, label],  # Pass input and label as positional arguments
+        kwargs={},            # No keyword arguments in this case
+        output_as_string=True,
+        output_precision=4
+    )
+
+    # Define input and label tensors
+    batch_size = 1
+    input = torch.randn(batch_size, args.output_channel, 32, 32)  # Example input tensor
+    label = torch.zeros(batch_size, 10, 32, 32)  # Example label tensor
+    label[:, 0, :, :] = 1  # Set the first label to 1 (example)
+
+    # Call calculate_flops with args and kwargs
+    flops, macs, params = calculate_flops(
+        model=dis_glob,
+        args=[input, label],  # Pass input and label as positional arguments
+        kwargs={},            # No keyword arguments in this case
+        output_as_string=True,
+        output_precision=4
+    )
 
     # Count parameters for generator and discriminator
     # gen_params = count_parameters(gen_glob)

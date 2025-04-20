@@ -17,7 +17,20 @@ class DatasetSplit(Dataset):
         image, label = self.dataset[self.idxs[item]]
         return image, label
     
-    
+
+class DatasetSplit_CelebA(Dataset):
+    def __init__(self, dataset, idxs):
+        self.dataset = dataset
+        self.idxs = list(idxs)
+
+    def __len__(self):
+        return len(self.idxs)
+
+    def __getitem__(self, item):
+        image, attr = self.dataset[self.idxs[item]]
+        return image, attr[20] # return gender attribute
+
+
 ##########################################
 #                  DCGAN                 #
 ##########################################
@@ -155,7 +168,10 @@ def loss_function_cvae(x, pred, mu, logvar):
 class LocalUpdate_CVAE(object): # CVAE raw
     def __init__(self, args, dataset=None, idxs=None):
         self.args = args
-        self.ldr_train = DataLoader(DatasetSplit(dataset, idxs), batch_size=args.local_bs, shuffle=True) # , drop_last=True
+        if args.dataset == 'celebA':
+            self.ldr_train = DataLoader(DatasetSplit_CelebA(dataset, idxs), batch_size=args.local_bs, shuffle=True) # , drop_last=True
+        else:
+            self.ldr_train = DataLoader(DatasetSplit(dataset, idxs), batch_size=args.local_bs, shuffle=True)
 
     def train(self, net, opt=None):
         net.train()
@@ -168,9 +184,12 @@ class LocalUpdate_CVAE(object): # CVAE raw
             train_loss = 0
             for batch_idx, (images, labels) in enumerate(self.ldr_train):
                 images = images.to(self.args.device) # images.shape: torch.Size([batch_size, 1, 28, 28])
-                label = np.zeros((images.shape[0], 10))
-                label[np.arange(images.shape[0]), labels] = 1
-                label = torch.tensor(label)
+                if self.args.dataset == 'celebA':
+                    label = labels.unsqueeze(-1).float()
+                else:
+                    label = np.zeros((images.shape[0], 10))
+                    label[np.arange(images.shape[0]), labels] = 1
+                    label = torch.tensor(label)
             
                 # labels = one_hot(labels, 10).to(self.args.device)
                 # recon_batch, mu, logvar = net(images, labels)

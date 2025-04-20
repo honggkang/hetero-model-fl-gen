@@ -254,6 +254,26 @@ def getDataset(args):
         dataset_train = datasets.STL10('/home/hong/NeFL/.data/stl10', split='train', download=True, transform=transform_train)
         dataset_test = datasets.STL10('/home/hong/NeFL/.data/stl10', split='test', download=True, transform=transform_test)
 
+    elif args.dataset == 'celebA':
+        ## CelebA Dataset
+        transform_train = transforms.Compose([
+            transforms.CenterCrop(178),  # Crop to original CelebA face region / 178x218
+            transforms.Resize(64),  # Resize to 64x64
+            transforms.RandomHorizontalFlip(),
+            transforms.ToTensor(),
+            transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),  # Normalize to [-1, 1]
+        ])
+
+        transform_test = transforms.Compose([
+            transforms.CenterCrop(178),  # Crop to original CelebA face region
+            transforms.Resize(64),  # Resize to 64x64
+            # transforms.RandomHorizontalFlip(),
+            transforms.ToTensor(),
+            transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),  # Normalize to [-1, 1]
+        ])        
+        root = '.data/celeba'
+        dataset_train = datasets.CelebA(root=root, split='train', target_type='attr', download=True, transform=transform_train)
+        dataset_test = datasets.CelebA(root=root, split='test', target_type='attr', download=True, transform=transform_test)
     ### downsampled ImageNet
     # imagenet_data = datasets.ImageNet('/home')
         
