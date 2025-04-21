@@ -28,6 +28,8 @@ def test_img(net_g, datatest, args):
     data_loader = DataLoader(datatest, batch_size=args.bs)
     with torch.no_grad():
       for idx, (data, target) in enumerate(data_loader):
+          if args.dataset=='celebA':
+              target = target[:,20].unsqueeze(-1).float()
           if 'cuda' in args.device:
               data, target = data.to(args.device), target.to(args.device)
           logits, log_probs = net_g(data)
